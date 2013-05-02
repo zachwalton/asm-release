@@ -31,3 +31,7 @@ a hit in the inode table but doesn't.
 
 It would be ideal to get an strace of an ASMOP_CLOSE_DISK so we can determine
 the format of oracleasm_close_disk_v2.cd_handle.
+
+Build:
+
+gcc -o asm_release asm_release.c
