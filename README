@@ -1,0 +1,33 @@
+Overview:
+
+asm_release.c, given an ASM disk name, issues an ASMOP_CLOSE_DISK via the
+asmlib ABI.  A great breakdown of the asmlib ABI is located here:
+
+http://www.scaleabilities.co.uk/2013/02/07/diagnosing-asmlib/
+
+Usage:
+
+./asm_release ASMXXXXXX # where ASMXXXXXX is the name of the disk to close
+
+Known Issues:
+
+Though this demonstrably interfaces with the asmlib ABI (the 32-bit
+oracleasm_abi_info.ai_status field is updated by the read() call),
+the format of oracleasm_close_disk_v2.cd_handle is unclear.  Looking at the
+asmlib source suggests that this value should be a 64-bit inode number, but so 
+far asm_release returns -EINVAL, which indicates that the hash value passed
+via oracleasm_close_disk_v2.cd_handle is not in the right format.
+
+From oracleasm.c:
+
+    disk_inode = ilookup5(asmdisk_mnt->mnt_sb, handle,
+                          asmdisk_test, ASMFS_I(inode));
+    if (!disk_inode)
+                return -EINVAL;
+
+So it's calling ilookup5() from fs/inode.c and passing 
+oracleasm_close_disk_v2.cd_handle as (unsigned long) hashval, which should get
+a hit in the inode table but doesn't.
+
+It would be ideal to get an strace of an ASMOP_CLOSE_DISK so we can determine
+the format of oracleasm_close_disk_v2.cd_handle.
